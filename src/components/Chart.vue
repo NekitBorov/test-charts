@@ -4,20 +4,23 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import { Chart } from 'highcharts-vue';
-import { onMounted } from "vue";
 
-const emit = defineEmits(['load'])
-
-defineProps({
-  chartOptions: {
-    type: Object,
-    default: () => {}
+export default {
+  components: {
+    Chart
+  },
+  props: {
+    chartOptions: {
+      type: Object,
+      default: () => {}
+    }
+  },
+  mounted() {
+    this.$emit('load')
   }
-})
-
-onMounted(() => emit('load'))
+}
 </script>
 
 <style scoped>
