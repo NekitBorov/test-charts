@@ -1,33 +1,14 @@
 <script setup>
-  import Chart from './Chart.vue'
-  import { ref, onUnmounted, getCurrentInstance } from 'vue'
+  import { ref, onUnmounted, getCurrentInstance, defineAsyncComponent } from 'vue'
   import renderComponent from './renderComponent'
   const { appContext } = getCurrentInstance()
   const container = ref()
   let destroyComp = null
 
-  const figures = [...document.getElementsByClassName('figure')]
+  const component = defineAsyncComponent(() => import('./Chart.vue'))
 
   const pageDataResponse = await fetch('https://demo.ccaf.io/cbeci/api/text_pages/cbsi%3Aeth_pos%3Aindex')
   const pageData = (await pageDataResponse.json()).data;
-
-  // const addFigure = (component) => {
-  //   const figures = [...document.getElementsByClassName('figure')]
-  //   if (!figures.length) { return }
-  //
-  //   // console.log('refs', Chart1.value)
-  //
-  //   if (refs[component.id]) {
-  //     refs[component.id][0].$el.style.display = 'flex'
-  //     refs[component.id][0].$el.style.display = 'block'
-  //     figures[component.order].appendChild(refs[component.id][0].$el)
-  //   }
-  // }
-
-  // const load = (component) => {
-  //   console.log('aaa')
-  //   // addFigure(component)
-  // }
 
   const powerDemandResponse = await fetch('https://demo.ccaf.io/cbeci/api/eth/pos/charts/network_power_demand')
   const powerDemandDataList = (await powerDemandResponse.json()).data;
@@ -88,16 +69,15 @@
       },
     ]
   };
-  const components = [{ options: powerDemandChartOptions, id: 'chart1'}]
+  const components = [{ value: 'chart', options: powerDemandChartOptions, id: 'chart1'}]
 
   onUnmounted(() => destroyComp?.())
 
   const load = async () => {
-    console.log('aaa')
     destroyComp?.()
     destroyComp = renderComponent({
       el: document.getElementsByClassName('figure')[2],
-      component: Chart,
+      component: component,
       props: {
         'chart-options': components[0].options
       },
@@ -111,13 +91,14 @@
 <template>
   <div>
     <div v-html="pageData.content" ref="container" id="container" @click="load" />
-    <Chart @load="load" class="loaded" />
-<!--    <Chart :chart-options="annConsumptionChartOptions" />-->
+    <component
+            :is="component"
+            @load="load"
+    />
   </div>
 </template>
 
 <style scoped>
   .loaded {
-
   }
 </style>
