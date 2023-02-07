@@ -6,11 +6,9 @@
 
 <script setup>
 import { Chart } from 'highcharts-vue';
-import { defineComponent } from "vue";
+import { onMounted } from "vue";
 
-defineComponent({
-  Chart
-})
+const emit = defineEmits(['load'])
 
 defineProps({
   chartOptions: {
@@ -18,6 +16,8 @@ defineProps({
     default: () => {}
   }
 })
+
+onMounted(() => emit('load'))
 </script>
 
 <style scoped>
