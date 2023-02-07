@@ -2,215 +2,54 @@
   <div>
     <div v-html="pageData.content" />
       <component
-        v-for="component in components"
+        v-for="(component, i) in components"
         :is="component.name"
-        :ref="el => setComponents(component.id,el)"
-        :key="component.id"
-        :chart-options="component.options"
-        @load="load(component)"
+        :ref="el => componentRefs[component.type] = el"
+        :key="component.type"
+        :chart-type="component.type"
+        @load="bindComponent(component)"
       />
-<!--    <Chart ref="test" @load="load(Chart)" :chart-options="powerDemandChartOptions"/>-->
   </div>
 </template>
 
-<!--<script setup>-->
-<!--import {defineAsyncComponent, ref} from 'vue'-->
-<!--import Chart from "@/components/Chart.vue";-->
-
-<!--const Chart1 = ref(null)-->
-<!--const Chart2 = ref(null)-->
-
-<!--const pageDataResponse = await fetch('https://demo.ccaf.io/cbeci/api/text_pages/cbsi%3Aeth_pos%3Aindex')-->
-<!--const pageData = (await pageDataResponse.json()).data;-->
-
-<!--const addFigure = (component) => {-->
-<!--  const figures = [...document.getElementsByClassName('figure')]-->
-
-<!--  console.log(Chart1.value.$el)-->
-
-<!--  if (!figures.length) { return }-->
-
-<!--  // figures[0].appendChild(test.value.$el)-->
-<!--}-->
-
-<!--const load = (component) => {-->
-<!--  addFigure(component)-->
-<!--}-->
-
-<!--const powerDemandResponse = await fetch('https://demo.ccaf.io/cbeci/api/eth/pos/charts/network_power_demand')-->
-<!--const powerDemandDataList = (await powerDemandResponse.json()).data;-->
-<!--const powerDemandChartOptions = {-->
-<!--  chart: {-->
-<!--    renderTo: 'container'-->
-<!--  },-->
-<!--  title: {-->
-<!--    text: 'Chart'-->
-<!--  },-->
-<!--  yAxis: {-->
-<!--    title: {-->
-<!--      text: 'Chart data'-->
-<!--    }-->
-<!--  },-->
-<!--  series: [-->
-<!--    {-->
-<!--      name: 'guess_power',-->
-<!--      data: powerDemandDataList.map(item => item.guess_power)-->
-<!--    },-->
-<!--    {-->
-<!--      name: 'max_power',-->
-<!--      data: powerDemandDataList.map(item => item.max_power)-->
-<!--    },-->
-<!--    {-->
-<!--      name: 'min_power',-->
-<!--      data: powerDemandDataList.map(item => item.min_power)-->
-<!--    },-->
-<!--  ]-->
-<!--};-->
-
-<!--const annConsumptionResponse = await fetch('https://demo.ccaf.io/cbeci/api/eth/pos/charts/annualised_consumption')-->
-<!--const annConsumptionDataList = (await annConsumptionResponse.json()).data;-->
-<!--const annConsumptionChartOptions = {-->
-<!--  chart: {-->
-<!--    renderTo: 'container'-->
-<!--  },-->
-<!--  title: {-->
-<!--    text: 'Chart'-->
-<!--  },-->
-<!--  yAxis: {-->
-<!--    title: {-->
-<!--      text: 'Chart data'-->
-<!--    }-->
-<!--  },-->
-<!--  series: [-->
-<!--    {-->
-<!--      name: 'guess_consumption',-->
-<!--      data: annConsumptionDataList.map(item => item.guess_consumption)-->
-<!--    },-->
-<!--    {-->
-<!--      name: 'max_consumption',-->
-<!--      data: annConsumptionDataList.map(item => item.max_consumption)-->
-<!--    },-->
-<!--    {-->
-<!--      name: 'min_consumption',-->
-<!--      data: annConsumptionDataList.map(item => item.min_consumption)-->
-<!--    },-->
-<!--  ]-->
-<!--};-->
-
-<!--const comp = defineAsyncComponent(() => import('./Chart.vue'))-->
-
-<!--const components = [-->
-<!--    { name: comp, options: powerDemandChartOptions, id: 'Chart1'},-->
-<!--    { name: comp, options: annConsumptionChartOptions, id: 'Chart2'}-->
-<!--]-->
-
-<!--</script>-->
-
 <script>
-import {defineAsyncComponent, ref} from 'vue'
+import {defineAsyncComponent, ref, reactive} from 'vue'
 
 export default {
   components: {
     Chart: defineAsyncComponent(() => import('./Chart.vue'))
   },
-  async setup() {
-
-    const Chart1 = ref(null)
-    const Chart2 = ref(null)
-
-    const pageDataResponse = await fetch('https://demo.ccaf.io/cbeci/api/text_pages/cbsi%3Aeth_pos%3Aindex')
+  data () {
+    return {
+      components: []
+    }
+  },
+  mounted () {
+    // вернемся к реальной задаче. У нас есть N графиков(компонентов). И нам не нужно их всех рендерить на странице. А сколько нужно и какие говорит нам апи.
+    // У каждого блока для подстановки(.figure) есть "number" - id графика. Давай узнаем какие графики нам нужны. Этот кусок кода в другом виде есть в примере
+    [...document.getElementsByClassName('figure')].forEach((reservePlace, i) => {
+      this.components.push({
+        name: 'Chart',
+        queuePosition: i,
+        type: reservePlace.dataset.number,
+      })
+    });
+  },
+  async setup () {
+    const pageDataResponse = await fetch('https://demo.ccaf.io/cbeci/api/text_pages/cbsi%3Aeth_pos%3Aindex');
     const pageData = (await pageDataResponse.json()).data;
 
-    const powerDemandResponse = await fetch('https://demo.ccaf.io/cbeci/api/eth/pos/charts/network_power_demand')
-    const powerDemandDataList = (await powerDemandResponse.json()).data;
-    const powerDemandChartOptions = {
-      chart: {
-        renderTo: 'container'
-      },
-      title: {
-        text: 'Chart'
-      },
-      yAxis: {
-        title: {
-          text: 'Chart data'
-        }
-      },
-      series: [
-        {
-          name: 'guess_power',
-          data: powerDemandDataList.map(item => item.guess_power)
-        },
-        {
-          name: 'max_power',
-          data: powerDemandDataList.map(item => item.max_power)
-        },
-        {
-          name: 'min_power',
-          data: powerDemandDataList.map(item => item.min_power)
-        },
-      ]
-    };
+    const componentRefs = {}; // хорошая была функция, но из-за одного присваивания наверно излишняя, оставил обьект
 
-    const annConsumptionResponse = await fetch('https://demo.ccaf.io/cbeci/api/eth/pos/charts/annualised_consumption')
-    const annConsumptionDataList = (await annConsumptionResponse.json()).data;
-    const annConsumptionChartOptions = {
-      chart: {
-        renderTo: 'container'
-      },
-      title: {
-        text: 'Chart'
-      },
-      yAxis: {
-        title: {
-          text: 'Chart data'
-        }
-      },
-      series: [
-        {
-          name: 'guess_consumption',
-          data: annConsumptionDataList.map(item => item.guess_consumption)
-        },
-        {
-          name: 'max_consumption',
-          data: annConsumptionDataList.map(item => item.max_consumption)
-        },
-        {
-          name: 'min_consumption',
-          data: annConsumptionDataList.map(item => item.min_consumption)
-        },
-      ]
-    };
-
-    const components = [
-      { name: 'Chart', options: powerDemandChartOptions, id: 'Chart1', queuePosition: 0 },
-      { name: 'Chart', options: annConsumptionChartOptions, id: 'Chart2', queuePosition: 2}
-    ]
-
-    const comRefs = {};
-    const setComponents = (key, el) => {
-      comRefs[key] = el;
-    }
-
-    const addFigure = (component) => {
-      const figures = [...document.getElementsByClassName('figure')]
-
-      console.log()
-
-      if (!figures.length) { return }
-
-      figures[component.queuePosition].appendChild(comRefs[component.id].$el)
-    }
-
-    const load = (component) => {
-      addFigure(component)
-    }
+    const bindComponent = (component) => {
+      const figures = document.getElementsByClassName('figure')  // оператор расширения для получения методов массива, обращение по индексу и так работает
+      figures[component.queuePosition]?.appendChild(componentRefs[component.type].$el) // вместо проверки пустого массива "optional chaining"
+    }; // удалим лишнюю функцию load и назовем функции по назначению
 
     return {
-      components,
       pageData,
-      setComponents,
-      addFigure,
-      load
+      componentRefs,
+      bindComponent
     }
   }
 }

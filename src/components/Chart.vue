@@ -1,24 +1,31 @@
 <template>
-  <div>
+  <div v-if="chartOptions.series">
     <Chart :options="chartOptions"/>
   </div>
 </template>
 
 <script>
 import { Chart } from 'highcharts-vue';
+import loadChartData from '../mixins/chartData.js'
 
 export default {
   components: {
     Chart
   },
   props: {
-    chartOptions: {
-      type: Object,
-      default: () => {}
+    chartType: {  // тут передадим только тип/id графика, но тут все графики, даже которых у нас нет, но мы их скроем выше
+      type: String,
+      default: ""
     }
   },
-  mounted() {
-    this.$emit('load')
+  data () {
+    return {
+      chartOptions: {}
+    }
+  },
+  mixins: [loadChartData],  // тут создадим библиотеку графиков
+  mounted () {
+    this.$emit('load');
   }
 }
 </script>
