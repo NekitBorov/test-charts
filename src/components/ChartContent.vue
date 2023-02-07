@@ -183,7 +183,7 @@ export default {
 
     const components = [
       { name: 'Chart', options: powerDemandChartOptions, id: 'Chart1', queuePosition: 0 },
-      { name: 'Chart', options: annConsumptionChartOptions, id: 'Chart2', queuePosition: 3}
+      { name: 'Chart', options: annConsumptionChartOptions, id: 'Chart2', queuePosition: 2}
     ]
 
     const comRefs = {};
